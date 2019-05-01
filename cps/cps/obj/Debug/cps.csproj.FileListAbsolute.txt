@@ -1,0 +1,9 @@
+C:\Users\Администратор\Desktop\comp. sim\cps\cps\bin\Debug\cps.exe.config
+C:\Users\Администратор\Desktop\comp. sim\cps\cps\bin\Debug\cps.exe
+C:\Users\Администратор\Desktop\comp. sim\cps\cps\bin\Debug\cps.pdb
+C:\Users\Администратор\Desktop\comp. sim\cps\cps\obj\Debug\cps.csprojResolveAssemblyReference.cache
+C:\Users\Администратор\Desktop\comp. sim\cps\cps\obj\Debug\cps.Form1.resources
+C:\Users\Администратор\Desktop\comp. sim\cps\cps\obj\Debug\cps.Properties.Resources.resources
+C:\Users\Администратор\Desktop\comp. sim\cps\cps\obj\Debug\cps.csproj.GenerateResource.Cache
+C:\Users\Администратор\Desktop\comp. sim\cps\cps\obj\Debug\cps.exe
+C:\Users\Администратор\Desktop\comp. sim\cps\cps\obj\Debug\cps.pdb
