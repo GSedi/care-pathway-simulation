@@ -26,7 +26,11 @@ namespace cps
         int cnt;
         int timePass = 0;
         int totalWaitingTime = 0;
+        int totalWaitingTimeInWard = 0;
         int maxiInQ = -1;
+        int maxiInWard = -1;
+        int patientsInQ = 0;
+        int patientsInWard = 0;
         Random rnd = new Random();
 
         public Form1()
@@ -47,6 +51,7 @@ namespace cps
 
             getDocsFromHospital();
             cnt = 0;
+            patientsInQ = hospital.Patients.Count();
         }
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
@@ -72,6 +77,7 @@ namespace cps
             newPicBox.Image = Patient.TestImg;
             this.Controls.Add(newPicBox);
             newPicBox.BringToFront();
+            this.addDeasesLevelToPB(newPicBox, hospital.Patients.Peek());
             dppb.Add(hospital.Patients.Dequeue(), newPicBox);
         }
 
@@ -96,6 +102,18 @@ namespace cps
 
         }
 
+        private void addDeasesLevelToPB(PictureBox picBox, Patient pat)
+        {
+            Label l = new Label();
+            l.Location = new Point(0, 0);
+            l.BackColor = Color.Black;
+            l.ForeColor = Color.White;
+            l.Size = new Size(15, 15);
+            l.Text = pat.DeasesLevel.ToString();
+            picBox.Controls.Add(l);
+            l.BringToFront();
+        }
+
         private void timer1_Tick(object sender, EventArgs e)
         {
             if (
@@ -104,6 +122,7 @@ namespace cps
                 (dwpb.Where(f => f.Key.Busy == false)).Count() > 0)
             {
                 hospital.Patients.Peek().Time = 0;
+                //Console.WriteLine(hospital.Patients.Peek());
                 addPatientPictureBox();
                 cnt++;
 
@@ -111,6 +130,7 @@ namespace cps
             else if(hospital.Patients.Count <= 0)
             {
                 hospital.addRandomPatients();
+                this.patientsInQ += hospital.Patients.Count();
             }
             else
             {
@@ -147,9 +167,7 @@ namespace cps
                                 {
                                     dpw.Add(ppb.Key, wpb.Key);
                                     wpb.Key.Busy = true;
-                                    break;
-
-                                    
+                                    break;           
                                 }
                             }
                         }
@@ -158,37 +176,43 @@ namespace cps
                     }
                     else if(ppb.Key.CurrentState == Patient.State.InReception)
                     {
-                        if (dpw.ContainsKey(ppb.Key))
+                        if (ppb.Key.Time < 1000)
                         {
-                            if (ppb.Key.Time < 1000)
+                            ppb.Key.Time += 10;
+                        }
+                        else
+                        {
+                            if (dpw.ContainsKey(ppb.Key))
                             {
-                                ppb.Key.Time += 100;
-                            }
-                            PictureBox curWard = dwpb[dpw[ppb.Key]];
-                            if ( curWard.Location.Y > ppb.Value.Location.Y)
-                            {
-                                Point pos = ppb.Key.move(ppb.Value.Location.X, ppb.Value.Location.Y, curWard.Location.X + 5, curWard.Location.Y + 5);
-                                ppb.Value.Location = new Point(ppb.Value.Location.X + pos.X, ppb.Value.Location.Y + pos.Y);
-                            }
-                            else if(curWard.Location.Y <= ppb.Value.Location.Y)
-                            {
-                                Point pos = ppb.Key.move(ppb.Value.Location.X, ppb.Value.Location.Y, curWard.Location.X + 5, curWard.Location.Y - 5);
-                                ppb.Value.Location = new Point(ppb.Value.Location.X + pos.X, ppb.Value.Location.Y + pos.Y);
-                            }
 
-                            if (Math.Abs(ppb.Value.Location.X - curWard.Location.X) < 7 && Math.Abs(ppb.Value.Location.Y - curWard.Location.Y) < 7)
-                            {
-                                foreach(KeyValuePair<Doctor, PictureBox> dpb in ddpb)
+                                ppb.Key.TimeInWard += timer2.Interval;
+                                PictureBox curWard = dwpb[dpw[ppb.Key]];
+                                if (curWard.Location.Y > ppb.Value.Location.Y)
                                 {
-                                    if (!dpb.Key.Busy)
-                                    {
-                                        ppb.Key.CurrentState = Patient.State.Recovering;
-                                        ppb.Key.Time = 0;
-                                        dpd.Add(ppb.Key, dpb.Key);
-                                        ddw.Add(dpb.Key, dpw[ppb.Key]);
-                                        dpb.Key.Busy = true;
+                                    Point pos = ppb.Key.move(ppb.Value.Location.X, ppb.Value.Location.Y, curWard.Location.X + 5, curWard.Location.Y + 5);
+                                    ppb.Value.Location = new Point(ppb.Value.Location.X + pos.X, ppb.Value.Location.Y + pos.Y);
+                                }
+                                else if (curWard.Location.Y <= ppb.Value.Location.Y)
+                                {
+                                    Point pos = ppb.Key.move(ppb.Value.Location.X, ppb.Value.Location.Y, curWard.Location.X + 5, curWard.Location.Y - 5);
+                                    ppb.Value.Location = new Point(ppb.Value.Location.X + pos.X, ppb.Value.Location.Y + pos.Y);
+                                }
 
-                                        break;
+                                if (Math.Abs(ppb.Value.Location.X - curWard.Location.X) < 7 && Math.Abs(ppb.Value.Location.Y - curWard.Location.Y) < 7)
+                                {
+                                    foreach (KeyValuePair<Doctor, PictureBox> dpb in ddpb)
+                                    {
+                                        if (!dpb.Key.Busy && 
+                                            dppb.Where(kv => kv.Key.CurrentState == Patient.State.InReception).All(kv => ppb.Key.DeasesLevel >= kv.Key.DeasesLevel))
+                                        {
+                                            ppb.Key.CurrentState = Patient.State.Recovering;
+                                            ppb.Key.Time = 0;
+                                            dpd.Add(ppb.Key, dpb.Key);
+                                            ddw.Add(dpb.Key, dpw[ppb.Key]);
+                                            dpb.Key.Busy = true;
+
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -199,12 +223,13 @@ namespace cps
                     {
                         if (dpd.Keys.Contains(ppb.Key))
                         {
-                            ppb.Key.Time += 100;
+                            ppb.Key.Time += 10;
                         }
                         if (ppb.Key.checkIfRecovered())
                         {
                             if (dpd.Keys.Contains(ppb.Key))
                             {
+                                ppb.Key.TimeInWard = 0;
                                 dpd[ppb.Key].Busy = false;
                                 if (ddw.Keys.Contains(dpd[ppb.Key]))
                                 {
@@ -236,7 +261,13 @@ namespace cps
                         }
                     }
                 }
-
+                var toRemoveDict = dppb.Where(kv => kv.Key.CurrentState == Patient.State.Recovered).ToArray();
+                foreach (var temp in toRemoveDict)
+                {
+                    dppb.Remove(temp.Key);
+                }
+                //toRemoveDict = null;
+                //Console.WriteLine(dppb.Count());
             }
             if((dwpb.Where(f => f.Key.Busy == false)).Count() > 0)
             {
@@ -270,7 +301,21 @@ namespace cps
                         }
                     }
                 }
+
             }
+
+            foreach (KeyValuePair<Patient, Ward> pw in dpw)
+            {
+                if (!dpd.Keys.Contains(pw.Key))
+                {
+                    totalWaitingTimeInWard += timer2.Interval;
+                    if (pw.Key.TimeInWard > maxiInWard)
+                    {
+                        maxiInWard = pw.Key.TimeInWard;
+                    }
+                }
+            }
+            patientsInWard = dpw.Where(pw => !dpd.Keys.Contains(pw.Key)).Count();
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)
@@ -292,6 +337,7 @@ namespace cps
         private void button2_Click(object sender, EventArgs e)
         {
             timer1.Enabled = false;
+            //label10.Text = ((this.patientsInQ) / (totalWaitingTime / 1000)).ToString();
         }
 
         private void trackBar1_Scroll(object sender, EventArgs e)
@@ -306,9 +352,14 @@ namespace cps
             label8.Text = recoveredPatients.Count.ToString();
             label7.Text = hospital.Patients.Count.ToString();
             label6.Text = cnt.ToString();
-            label10.Text = ((hospital.Patients.Count() / (timePass / 1000))).ToString();
+            //label10.Text = ((totalWaitingTime / 1000) / (timePass / 1000)).ToString();
+            label10.Text = ((totalWaitingTime / 1000) / (patientsInQ)).ToString();
             label11.Text = (totalWaitingTime / 1000).ToString();
             label13.Text = (maxiInQ / 1000).ToString();
+            label17.Text = ((totalWaitingTimeInWard / 1000) / (dpw.Where(pw => !dpd.Keys.Contains(pw.Key)).Count())).ToString();
+            label15.Text = (totalWaitingTimeInWard / 1000).ToString();
+            label19.Text = (maxiInWard / 1000).ToString();
+
         }
     }
 }

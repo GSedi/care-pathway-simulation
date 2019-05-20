@@ -41,6 +41,8 @@ namespace cps
         {
             Random rnd = new Random();
 
+            Queue<Patient> tempPatients = new Queue<Patient>();
+
             int lim = rnd.Next(1, 15);
             for(int i = 0; i < lim; i++ )
             {
@@ -50,9 +52,12 @@ namespace cps
                     id = rnd.Next(0, 1000);
                     
                 } while (((this.Patients.Where(p => p.Id == id)).ToList<Patient>()).Count  > 0);
-                
-                this.Patients.Enqueue(new Patient(id, rnd.Next(1, 5)));
+
+                //this.Patients.Enqueue(new Patient(id, rnd.Next(1, 5)));
+                tempPatients.Enqueue(new Patient(id, rnd.Next(1, 5)));
             }
+            this.Patients = new Queue<Patient>(tempPatients.OrderBy(q => q.DeasesLevel).Reverse());
+            tempPatients.Clear();
         }
 
         public Dictionary<Ward, PictureBox> setDictWards(List<PictureBox> pbs)

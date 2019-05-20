@@ -19,6 +19,7 @@ namespace cps
         public static string imgpath = @"patient.png";
         public static Image TestImg = Image.FromFile(imgpath);
         public int Time { get; set; }
+        public int TimeInWard { get; set; }
         public bool Moving { get; set; }
 
         public Patient() { }
@@ -30,6 +31,7 @@ namespace cps
             this.CurrentState = State.InQueue;
             this.Img = Image.FromFile(imgpath);
             this.Time = 0;
+            this.TimeInWard = 0;
             this.Moving = false;
         }
 
@@ -43,12 +45,17 @@ namespace cps
 
         public bool checkIfRecovered()
         {
-            if (this.Time > 50000 && this.DeasesLevel == 1) return true;
-            if (this.Time > 40000 && this.DeasesLevel == 2) return true;
+            if (this.Time > 50000 && this.DeasesLevel == 5) return true;
+            if (this.Time > 40000 && this.DeasesLevel == 4) return true;
             if (this.Time > 30000 && this.DeasesLevel == 3) return true;
-            if (this.Time > 20000 && this.DeasesLevel == 4) return true;
-            if (this.Time > 10000 && this.DeasesLevel == 5) return true;
+            if (this.Time > 20000 && this.DeasesLevel == 2) return true;
+            if (this.Time > 10000 && this.DeasesLevel == 1) return true;
             return false;
+        }
+
+        public override string ToString()
+        {
+            return this.DeasesLevel.ToString();
         }
     }
 }
